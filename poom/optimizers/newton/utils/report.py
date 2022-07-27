@@ -1,4 +1,5 @@
 class ResultReporter:
+
     def __init__(self) -> None:
         self.xmin = []
         self.ymin = []
@@ -12,7 +13,5 @@ class ResultReporter:
         for k in self.__dict__:
             v = self.__getattribute__(k)
             s.append(f"{k}:\t\t{v}")
+        s.append(f"{'='*50}\n")
         return "\n".join(s)
-
-    def pareto_front(self):
-        pass

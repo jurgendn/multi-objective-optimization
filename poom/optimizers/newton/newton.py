@@ -5,13 +5,15 @@ from scipy.optimize import NonlinearConstraint, minimize
 from tqdm.auto import tqdm
 
 from .utils import get_approx
-from .utils.report import ResultReporter
 
 
 class NewtonDirection:
-    def __init__(self, func_list: List[Callable]) -> None:
+
+    def __init__(self, func_list: List[Callable], n_objectives: int,
+                 n_variables: int) -> None:
         self.objective = lambda x: x[-1]
-        self.n_objective = len(func_list)
+        self.n_objective = n_objectives
+        self.n_variables = n_variables
         self.func_list = func_list
 
     def __make_constraint(self, func: Callable, x):
@@ -34,7 +36,7 @@ class NewtonDirection:
     def forward(self, x):
         constraints = self.make_constraints(x=x)
         res = minimize(fun=self.objective,
-                       x0=np.random.rand(self.n_objective + 1, ),
+                       x0=np.random.rand(self.n_variables + 1, ),
                        constraints=constraints)
         return res.x[:-1], res.x[-1]
 
@@ -43,11 +45,12 @@ class NewtonDirection:
 
 
 class LineSearch:
+
     def __init__(self,
                  objective_functions: List[Callable],
                  divider: float = 2,
                  step_size: float = 1,
-                 sigma: float = 5e-1) -> None:
+                 sigma: float = 7e-1) -> None:
         self.divider = divider
         self.step_size = step_size
         self.objective_functions = objective_functions
@@ -70,18 +73,23 @@ class LineSearch:
                     step_length=step_length) is True:
                 break
             step_length /= 2
-        return step_length * 2
+        return step_length
 
     def __call__(self, x, direction, theta):
         return self.armijo(x, direction, theta)
 
 
 class Newton:
+
     def __init__(self,
-                 tol: float = 1e-10,
+                 tol: float = 1e-12,
                  max_iteration: int = 1000,
+                 n_variables: int = 3,
+                 n_objectives: int = 2,
                  objectives: List[Callable] = []) -> None:
         self.tol = tol
+        self.n_objective = n_objectives
+        self.n_variables = n_variables
         self.max_iteration = max_iteration
         self.objectives = objectives
 
@@ -90,7 +98,9 @@ class Newton:
 
     def init(self):
         self.line_search = LineSearch(objective_functions=self.objectives)
-        self.direction_finder = NewtonDirection(func_list=self.objectives)
+        self.direction_finder = NewtonDirection(func_list=self.objectives,
+                                                n_objectives=self.n_objective,
+                                                n_variables=self.n_variables)
 
     def calc(self, x):
         res = []
@@ -102,24 +112,23 @@ class Newton:
         assert len(self.objectives) > 0
         self.init()
         x = x0
-        res = {"xmin": [], "ymin": []}
-        res['xmin'].append(x)
+        res = []
         y = self.calc(x)
-        res['ymin'].append(y)
+        res.append(y)
         for _ in tqdm(range(self.max_iteration), leave=False):
             s, t = self.direction_finder(x)
             step = self.line_search(x, s, t)
-            if t == 0:
+            # if t == 0:
+            if np.abs(t) < self.tol:
                 break
             x = x + step * s
             y = self.calc(x)
-            res['xmin'].append(x)
-            res['ymin'].append(y)
+            res.append(y)
         return res
 
     def find_pareto_front(self, x: List[Iterable]):
         output = []
-        for x0 in x:
+        for x0 in tqdm(x):
             reporter = self.fit(x0)
             output.append(reporter)
         return output

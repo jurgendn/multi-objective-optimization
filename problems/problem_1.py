@@ -1,14 +1,18 @@
-from typing import Iterable
+import torch
 
-import numpy as np
-
-
-def obj_1(x: Iterable):
-    return x[0] + x[1]**2 + (x[0]**2 + x[1]**2)*2
+n_variables = 30
+n_objectives = 2
 
 
-def obj_2(x: Iterable):
-    return x[0] - x[1]**2 + (x[0]**2 + x[1])
+def f1(x):
+    return x[0]
 
 
-objs = [obj_1, obj_2]
+def f2(x):
+    n = x.shape[0]
+    g = 1 + 9 / (n - 1) * x[1:].sum()
+    h = 1 - torch.sqrt(x[0] / g)
+    return g * h
+
+
+objs = [f1, f2]
