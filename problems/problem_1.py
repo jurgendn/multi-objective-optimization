@@ -9,8 +9,8 @@ def f1(x):
 
 
 def f2(x):
-    n = x.shape[0]
-    g = 1 + 9 / (n - 1) * x[1:].sum()
+    x = torch.as_tensor(x)
+    g = 1 + 9 / (n_variables - 1) * x[1:].sum()
     h = 1 - torch.sqrt(x[0] / g)
     return g * h
 

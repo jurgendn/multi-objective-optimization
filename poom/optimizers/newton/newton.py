@@ -1,5 +1,6 @@
 from typing import Callable, Iterable, List
 
+import torch
 import numpy as np
 from scipy.optimize import NonlinearConstraint, minimize
 from tqdm.auto import tqdm
@@ -18,6 +19,8 @@ class NewtonDirection:
 
     def __make_constraint(self, func: Callable, x):
         g, h = get_approx(func, x)
+        g = g.numpy()
+        h = h.numpy()
 
         def constraints(s):
             return np.transpose(g).dot(
@@ -118,8 +121,8 @@ class Newton:
         for _ in tqdm(range(self.max_iteration), leave=False):
             s, t = self.direction_finder(x)
             step = self.line_search(x, s, t)
-            # if t == 0:
-            if np.abs(t) < self.tol:
+            if t == 0:
+            # if np.abs(t) < self.tol:
                 break
             x = x + step * s
             y = self.calc(x)

@@ -19,7 +19,7 @@ def objective_generator(idx):
         s = 1 / 2
         for i in range(1, n_objectives - idx):
             s *= x[i]
-            s *= (1 - x[n_objectives - idx - 1])
+            s *= (1 - x[n_variables - i - 1])
         s *= (1 + g(x))
         return s
 

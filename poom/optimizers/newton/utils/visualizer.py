@@ -47,13 +47,15 @@ class Visualizer:
                          y=domain[:, 1],
                          z=domain[:, 2],
                          mode="markers",
-                         marker=dict(color='red')))
+                         marker=dict(color='red', size=1),
+                         name="Im F"))
         fig.add_trace(
             go.Scatter3d(x=self.pareto_front[:, 0],
                          y=self.pareto_front[:, 1],
                          z=self.pareto_front[:, 2],
                          mode="markers",
-                         marker=dict(color='teal')))
+                         marker=dict(color='blue', size=4),
+                         name="Pareto Points"))
         return fig
 
     def plot_domain(self, domain):
@@ -87,7 +89,7 @@ class Visualizer:
         return fig
 
     def plot_moving_step(self, n_points: int = None):
-        if n_points is None:
+        if n_points is None or n_points > len(self.trace):
             n_points = len(self.trace)
         if self.n_objectives == 2:
             fig = self.__plot_moving_step_2d(n_points=n_points)
@@ -104,7 +106,8 @@ class Visualizer:
             fig.add_trace(go.Scatter(x=x_axis,
                                      y=r[:, obj_idx],
                                      mode="lines+markers",
-                                     name=f"Objective {obj_idx + 1}"),
+                                     name=f"Objective {obj_idx + 1}",
+                                     marker=dict(size=1)),
                           row=1,
                           col=obj_idx + 1)
         return fig
