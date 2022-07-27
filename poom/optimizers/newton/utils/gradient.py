@@ -7,11 +7,13 @@ from torch.autograd import functional as tf
 
 
 def gradient(f: Callable, x):
-    return approx_fprime(x, f, epsilon=1e-5)
+    with torch.no_grad():
+        f_prime = approx_fprime(x, f, epsilon=1e-5)
+    return f_prime
 
 
 def hessian(f: Callable, x):
-    x = Tensor(x)
+    x = torch.as_tensor(x).float()
     with torch.no_grad():
         h = tf.hessian(f, x)
     return h

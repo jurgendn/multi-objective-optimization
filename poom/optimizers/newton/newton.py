@@ -70,7 +70,7 @@ class LineSearch:
                     step_length=step_length) is True:
                 break
             step_length /= 2
-        return step_length
+        return step_length * 2
 
     def __call__(self, x, direction, theta):
         return self.armijo(x, direction, theta)
@@ -78,7 +78,7 @@ class LineSearch:
 
 class Newton:
     def __init__(self,
-                 tol: float = 1e-7,
+                 tol: float = 1e-10,
                  max_iteration: int = 1000,
                  objectives: List[Callable] = []) -> None:
         self.tol = tol
@@ -102,11 +102,24 @@ class Newton:
         assert len(self.objectives) > 0
         self.init()
         x = x0
-        for idx in tqdm(range(self.max_iteration), leave=False):
+        res = {"xmin": [], "ymin": []}
+        res['xmin'].append(x)
+        y = self.calc(x)
+        res['ymin'].append(y)
+        for _ in tqdm(range(self.max_iteration), leave=False):
             s, t = self.direction_finder(x)
+            step = self.line_search(x, s, t)
             if t == 0:
                 break
-            step = self.line_search(x, s, t)
             x = x + step * s
-        y = self.calc(x)
-        return ResultReporter(x_min=x, y_min=y, n_iter=idx + 1)
+            y = self.calc(x)
+            res['xmin'].append(x)
+            res['ymin'].append(y)
+        return res
+
+    def find_pareto_front(self, x: List[Iterable]):
+        output = []
+        for x0 in x:
+            reporter = self.fit(x0)
+            output.append(reporter)
+        return output

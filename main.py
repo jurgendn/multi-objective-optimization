@@ -1,19 +1,16 @@
 import numpy as np
+from tqdm.auto import tqdm
 
-from poom.optimizers import Newton
+from poom import optimizers as optim
+from problems import objs
 
+optimizer = optim.Newton(tol=1e-5, max_iteration=100, objectives=objs)
 
-def problem_1(x) -> float:
-    return x[0]**2 + x[1] + 1
+init_cloud = np.random.uniform(low=-4, high=4, size=(50, 2))
+res = []
+for init in tqdm(init_cloud, leave=False):
+    out = optimizer.fit(init)
+    res.append(out)
 
-
-def problem_2(x) -> float:
-    return x[0] - x[1]**2
-
-
-optimizer = Newton()
-optimizer.add_problem(problem_1)
-optimizer.add_problem(problem_2)
-
-out = optimizer.fit([0, 1])
-print(out)
+res = np.array(res)
+print(res)
