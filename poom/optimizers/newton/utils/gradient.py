@@ -6,8 +6,9 @@ from torch.autograd import functional as tf
 
 
 def gradient(f: Callable, x):
-    f_prime = approx_fprime(x, f, epsilon=1e-7)
-    return torch.from_numpy(f_prime).float()
+    x = torch.as_tensor(x).float()
+    grad = tf.jacobian(f, x)
+    return grad
 
 
 def hessian(f: Callable, x):

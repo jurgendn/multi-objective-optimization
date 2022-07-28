@@ -9,7 +9,6 @@ from .utils import get_approx
 
 
 class NewtonDirection:
-
     def __init__(self, func_list: List[Callable], n_objectives: int,
                  n_variables: int) -> None:
         self.objective = lambda x: x[-1]
@@ -48,7 +47,6 @@ class NewtonDirection:
 
 
 class LineSearch:
-
     def __init__(self,
                  objective_functions: List[Callable],
                  divider: float = 2,
@@ -70,20 +68,19 @@ class LineSearch:
 
     def armijo(self, x: Iterable, direction: Iterable, theta: float):
         step_length = self.step_size
-        for _ in range(10):
+        for _ in range(100):
             if self.is_satisfy(
                     x=x, direction=direction, theta=theta,
                     step_length=step_length) is True:
-                break
+                return step_length
             step_length /= 2
-        return step_length
+        return 0
 
     def __call__(self, x, direction, theta):
         return self.armijo(x, direction, theta)
 
 
 class Newton:
-
     def __init__(self,
                  tol: float = 1e-12,
                  max_iteration: int = 1000,

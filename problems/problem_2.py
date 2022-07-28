@@ -1,4 +1,4 @@
-n_variables = 4
+n_variables = 3
 n_objectives = 3
 
 

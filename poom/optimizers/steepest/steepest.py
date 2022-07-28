@@ -1,71 +1,53 @@
-from typing import Callable, Iterable, List
-
 import numpy as np
-import torch
-from scipy.optimize import minimize
-
-from .utils import gradient
-
-
-class LineSearch:
-
-    def __init__(self,
-                 objective_functions: List[Callable],
-                 divider: float = 2,
-                 step_size: float = 1,
-                 sigma: float = 7e-1) -> None:
-        self.divider = divider
-        self.step_size = step_size
-        self.objective_functions = objective_functions
-        self.sigma = sigma
-
-    def is_satisfy(self, x: Iterable, direction: Iterable, theta: float,
-                   step_length) -> bool:
-        for f in self.objective_functions:
-            ref_values = f(x + step_length *
-                           direction) - f(x) - self.sigma * step_length * theta
-            if ref_values > 0:
-                return False
-        return True
-
-    def armijo(self, x: Iterable, direction: Iterable, theta: float):
-        step_length = self.step_size
-        for _ in range(10):
-            if self.is_satisfy(
-                    x=x, direction=direction, theta=theta,
-                    step_length=step_length) is True:
-                break
-            step_length /= 2
-        return step_length
-
-    def __call__(self, x, direction, theta):
-        return self.armijo(x, direction, theta)
+from typing import Any, Callable
+from scipy.optimize import fmin
+from dataclasses import dataclass
+from tqdm.auto import tqdm
+import matplotlib.pyplot as plt
 
 
+class Obj:
+    def f(self, x):
+        return x[0]**2 + 3 * (x[1] - 1)**2
+
+    def g(self, x):
+        return 2 * (x[0] - 1)**2 + x[1]**2
+
+    def Fs(self, x):
+        return np.array([self.f(x), self.g(x)])
+
+    def Fss(self):
+        return np.array([self.f, self.g])
+
+
+# contrained conditions
+
+
+@dataclass
 class SteepestDescent:
+    ndim: int
+    nu: float  #alpha
+    sigma: float  #m1
+    eps: float
 
-    def __init__(self,
-                 objectives: List[Callable],
-                 n_objectives: int = 2,
-                 n_variables: int = 2,
-                 divider: float = 2,
-                 step_size: float = 1,
-                 max_iteration: int = 100,
-                 eps: float = 1) -> None:
-        self.objectives = objectives
-        self.n_objectives = n_objectives
-        self.n_variables = n_variables
-        self.eps = eps
-        self.line_search = LineSearch(objective_functions=objectives,
-                                      divider=divider,
-                                      step_size=step_size,
-                                      sigma=0.7)
+    def grad(self, f, x, h=1e-4):
+        g = np.zeros_like(x)
+        for i in range(self.ndim):
+            tmp = x[i]
+            x[i] = tmp + h
+            yr = f(x)
+            x[i] = tmp - h
+            yl = f(x)
+            g[i] = (yr - yl) / (2 * h)
+            x[i] = tmp
+        return g
 
     def nabla_F(self, x):
-        nabla_F = np.zeros(
-            (self.n_objectives, self.n_variables))  # (m, n) dimensional matrix
-        for i, func in enumerate(self.objectives):
-            nabla_F[i] = gradient(func, x)
+        obj = Obj()
+        F = obj.Fss()
+        nabla_F = np.zeros((len(F), self.ndim))  # (m, n) dimensional matrix
+        for i, f in enumerate(F):
+            nabla_F[i] = self.grad(F[i], x)
         return nabla_F
 
     def phi(self, d, x):
@@ -75,21 +57,31 @@ class SteepestDescent:
     def theta(self, d, x):
         return self.phi(d, x) + 0.5 * np.linalg.norm(d)**2
 
-    def calc(self, x):
-        res = []
-        for func in self.objectives:
-            res.append(func(x))
-        return torch.Tensor(res)
+    def armijo(self, d, x):
+        obj = Obj()
+        t = 1
+        Fl = np.array(obj.Fs(x + t * d))
+        Fr = np.array(obj.Fs(x))
+        Re = self.sigma * t * np.dot(self.nabla_F(x), d)
+        while np.all(Fl > Fr + Re):
+            t *= self.nu
+            Fl = np.array(obj.Fs(x + t * d))
+            Fr = np.array(obj.Fs(x))
+            Re = self.sigma * t * np.dot(self.nabla_F(x), d)
+        return t
 
-    def fit(self, x):
-        res = []
-        for i in range(self.max_iteration):
-            t = self.line_search.armijo(x=x, direction=d, theta=th)
-            d = minimize(self.phi, x, args=(x, ))
+    def steepest(self, x):
+        obj = Obj()
+        list_point = []
+        d = np.array(fmin(self.phi, x, args=(x, )))
+        th = self.theta(d, x)
+        for i in range(1000):
             th = self.theta(d, x)
+            t = self.armijo(d, x)
+            y = obj.Fs(x)
+            list_point.append(y)
             x = x + t * d
-            if abs(th) < self.eps:
+            d = np.array(fmin(self.phi, x, args=(x, )))
+            if abs(th) > self.eps:
                 break
-            y = self.calc(x)
-            res.append(y)
-        return res
+        return list_point
