@@ -5,7 +5,7 @@ import torch
 from tqdm.auto import tqdm
 
 from poom import optimizers as optim
-from utils.visualization import Visualizer
+from poom.utils.visualization import Visualizer
 # from problems.problem_3 import n_objectives, n_variables, objs
 from problems.problem_4 import n_objectives, n_variables, objs
 # from problems.problem_1 import n_objectives, n_variables, objs

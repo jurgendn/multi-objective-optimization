@@ -6,6 +6,7 @@ __pycache__/
 # MacOS draft files
 .DS_Store
 *.pl
+*.pkl
 results/
 
 # C extensions
