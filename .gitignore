@@ -5,6 +5,8 @@ __pycache__/
 
 # MacOS draft files
 .DS_Store
+*.pl
+results/
 
 # C extensions
 *.so

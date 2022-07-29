@@ -1,13 +1,25 @@
-n_variables = 2
+n_variables = 3
 n_objectives = 2
+
+from math import sqrt
+
+import torch
 
 
 def f(x):
-    return (x[0] - 1)**2 + 3 * (x[1] - 10)**2
+    x = torch.as_tensor(x)
+    s = (x[0] - 1 / sqrt(3))**2 + (x[1] - 1 / sqrt(3))**2 + (x[2] -
+                                                             1 / sqrt(3))**2
+    s = torch.exp(-s)
+    return 1 - s
 
 
 def g(x):
-    return 2 * (x[1] - 10)**4 + (x[0] - 1)**2
+    x = torch.as_tensor(x)
+    s = (x[0] + 1 / sqrt(3))**2 + (x[1] + 1 / sqrt(3))**2 + (x[2] +
+                                                             1 / sqrt(3))**2
+    s = torch.exp(-s)
+    return 1 - s
 
 
 objs = [f, g]
