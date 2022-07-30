@@ -25,7 +25,7 @@ class NewtonDirection:
 
         return constraints
 
-    def _get_theta(self, x, s):
+    def _get_theta(self, x: Iterable, s: Iterable) -> float:
         res = []
         for f in self.func_list:
             g, h = get_approx(f, x)
@@ -128,7 +128,6 @@ class Newton:
             s, t = self.direction_finder(x)
             step = self.line_search(x, s, t)
             if t == 0:
-                # if np.abs(t) < self.tol:
                 break
             x = x + step * s
             y = self.calc(x)
