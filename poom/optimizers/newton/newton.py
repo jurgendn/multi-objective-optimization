@@ -27,7 +27,7 @@ class NewtonDirection:
 
     def _get_theta(self, x, s):
         res = []
-        for f in self.objective:
+        for f in self.func_list:
             g, h = get_approx(f, x)
             theta = np.transpose(g).dot(
                 s) + (np.transpose(s).dot(h).dot(s)) / 2

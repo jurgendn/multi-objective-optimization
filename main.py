@@ -8,8 +8,8 @@ from poom import optimizers as optim
 from poom.utils.visualization import Visualizer
 # from problems.problem_3 import n_objectives, n_variables, objs
 # from problems.problem_4 import n_objectives, n_variables, objs
-from problems.problem_1 import n_objectives, n_variables, objs
-# from problems.problem_2 import n_objectives, n_variables, objs
+# from problems.problem_1 import n_objectives, n_variables, objs
+from problems.problem_2 import n_objectives, n_variables, objs
 from utils.helpers import make_mesh
 
 # from problems.dtlz import n_objectives, n_variables, objs
@@ -22,19 +22,19 @@ optimizer = optim.Newton(tol=1e-7,
                          n_objectives=n_objectives,
                          n_variables=n_variables)
 
-init_cloud = 0.3 * torch.abs(torch.randn(size=(400, n_variables)))
-# res = optimizer.find_pareto_front(init_cloud)
+init_cloud = 2 * torch.randn(size=(40, n_variables))
+res = optimizer.find_pareto_front(init_cloud)
 
-# with open("res_1.pl", "wb") as f:
-#     pickle.dump(res, f)
+with open("res_1.pl", "wb") as f:
+    pickle.dump(res, f)
 
-with open("res_1.pl", "rb") as f:
-    res = pickle.load(f)
+# with open("res_1.pl", "rb") as f:
+#     res = pickle.load(f)
 
 visulizer = Visualizer(n_objectives=n_objectives)
 visulizer.add_data(data=res)
 
-mesh = make_mesh(low=-4, high=4, n_points=150, n_variables=n_variables)
+mesh = make_mesh(low=-4, high=4, n_points=20, n_variables=n_variables)
 
 im_f = []
 for point in tqdm(mesh):
