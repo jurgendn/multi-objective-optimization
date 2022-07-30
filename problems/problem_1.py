@@ -23,13 +23,13 @@ def f2(x):
 
 
 def constraint_1(x):
-    first = (-1 < x[0]) * (x[0] < 1)
-    return first
+    status = (-2 <= x[0]) and (x[0] <= 2)
+    return status
 
 
 def constraint_2(x):
-    second = (-1 < x[1]) * (x[1] < 1)
-    return second
+    status = (-2 <= x[1]) and (x[1] <= 2)
+    return status
 
 
 def constraints(x):

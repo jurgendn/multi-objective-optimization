@@ -18,17 +18,17 @@ constraints = []
 
 
 def constraint_1(x):
-    first = (-1 < x[0]) * (x[0] < 1)
+    first = (-1 < x[0]) and (x[0] < 1)
     return first
 
 
 def constraint_2(x):
-    second = (-1 < x[1]) * (x[1] < 1)
+    second = (-1 < x[1]) and (x[1] < 1)
     return second
 
 
 def constraints(x):
-    return constraint_1(x) * constraint_2(x)
+    return constraint_1(x) and constraint_2(x)
 
 
 objs = [f, g, h]

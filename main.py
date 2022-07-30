@@ -17,7 +17,7 @@ from utils.helpers import make_mesh
 FIGURE_PATH = "./results"
 
 optimizer = optim.Newton(tol=1e-7,
-                         max_iteration=100,
+                         max_iteration=200,
                          objectives=objs,
                          n_objectives=n_objectives,
                          n_variables=n_variables,
@@ -39,7 +39,7 @@ with open("res_1.pl", "wb") as f:
 visulizer = Visualizer(n_objectives=n_objectives)
 visulizer.add_data(data=res)
 
-mesh = make_mesh(low=-5, high=5, n_points=50, n_variables=n_variables)
+mesh = make_mesh(low=-2, high=2, n_points=20, n_variables=n_variables)
 
 im_f = []
 for point in tqdm(mesh):

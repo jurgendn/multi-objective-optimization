@@ -61,7 +61,7 @@ class LineSearch:
                  constraints: Callable = None,
                  divider: float = 2,
                  step_size: float = 1,
-                 sigma: float = 7e-1) -> None:
+                 sigma: float = 5e-1) -> None:
         self.divider = divider
         self.step_size = step_size
         self.constraints = constraints
@@ -72,9 +72,7 @@ class LineSearch:
         if self.constraints is None:
             return True
         status = self.constraints(x)
-        if status is False:
-            return False
-        return True
+        return status
 
     def __is_significant_value(self, x_new: Iterable, x_old: Iterable,
                                step_length: float, theta: float):
@@ -90,9 +88,7 @@ class LineSearch:
         is_significant_value = self.__is_significant_value(
             x_new=x_new, x_old=x, step_length=step_length, theta=theta)
         is_satisfy_constraitns = self.__is_inbound(x_new)
-        if is_satisfy_constraitns is True and is_significant_value is True:
-            return True
-        return False
+        return is_satisfy_constraitns and is_significant_value
 
     def armijo(self, x: Iterable, direction: Iterable, theta: float):
         step_length = self.step_size
@@ -163,4 +159,4 @@ class Newton:
             reporter, _x = self.fit(x0)
             output.append(reporter)
             argmin.append(_x)
-        return output, argmin
+        return output, np.array(argmin)
