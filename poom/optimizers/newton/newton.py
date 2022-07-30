@@ -58,22 +58,41 @@ class NewtonDirection:
 class LineSearch:
     def __init__(self,
                  objective_functions: List[Callable],
+                 constraints: Callable = None,
                  divider: float = 2,
                  step_size: float = 1,
                  sigma: float = 7e-1) -> None:
         self.divider = divider
         self.step_size = step_size
+        self.constraints = constraints
         self.objective_functions = objective_functions
         self.sigma = sigma
 
-    def is_satisfy(self, x: Iterable, direction: Iterable, theta: float,
-                   step_length: float) -> bool:
+    def __is_inbound(self, x: Iterable) -> bool:
+        if self.constraints is None:
+            return True
+        status = self.constraints(x)
+        if status is False:
+            return False
+        return True
+
+    def __is_significant_value(self, x_new: Iterable, x_old: Iterable,
+                               step_length: float, theta: float):
         for f in self.objective_functions:
-            ref_values = f(x + step_length *
-                           direction) - f(x) - self.sigma * step_length * theta
+            ref_values = f(x_new) - f(x_old) - self.sigma * step_length * theta
             if ref_values > 0:
                 return False
         return True
+
+    def is_satisfy(self, x: Iterable, direction: Iterable, theta: float,
+                   step_length: float) -> bool:
+        x_new = x + step_length * direction
+        is_significant_value = self.__is_significant_value(
+            x_new=x_new, x_old=x, step_length=step_length, theta=theta)
+        is_satisfy_constraitns = self.__is_inbound(x_new)
+        if is_satisfy_constraitns is True and is_significant_value is True:
+            return True
+        return False
 
     def armijo(self, x: Iterable, direction: Iterable, theta: float):
         step_length = self.step_size
@@ -95,18 +114,21 @@ class Newton:
                  max_iteration: int = 1000,
                  n_variables: int = 3,
                  n_objectives: int = 2,
-                 objectives: List[Callable] = []) -> None:
+                 objectives: List[Callable] = [],
+                 constraints: Callable = None) -> None:
         self.tol = tol
         self.n_objective = n_objectives
         self.n_variables = n_variables
         self.max_iteration = max_iteration
         self.objectives = objectives
+        self.constraints = constraints
 
     def add_problem(self, func: Callable):
         self.objectives.append(func)
 
     def init(self):
-        self.line_search = LineSearch(objective_functions=self.objectives)
+        self.line_search = LineSearch(objective_functions=self.objectives,
+                                      constraints=self.constraints)
         self.direction_finder = NewtonDirection(func_list=self.objectives,
                                                 n_objectives=self.n_objective,
                                                 n_variables=self.n_variables)
@@ -132,11 +154,13 @@ class Newton:
             x = x + step * s
             y = self.calc(x)
             res.append(y)
-        return res
+        return res, x
 
     def find_pareto_front(self, x: List[Iterable]):
         output = []
+        argmin = []
         for x0 in tqdm(x):
-            reporter = self.fit(x0)
+            reporter, _x = self.fit(x0)
             output.append(reporter)
-        return output
+            argmin.append(_x)
+        return output, argmin
