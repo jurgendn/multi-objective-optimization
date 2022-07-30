@@ -18,14 +18,21 @@ class NewtonDirection:
 
     def __make_constraint(self, func: Callable, x):
         g, h = get_approx(func, x)
-        g = g.numpy()
-        h = h.numpy()
 
         def constraints(s):
             return np.transpose(g).dot(
                 s[:-1]) + (np.transpose(s[:-1]).dot(h).dot(s[:-1])) / 2 - s[-1]
 
         return constraints
+
+    def _get_theta(self, x, s):
+        res = []
+        for f in self.objective:
+            g, h = get_approx(f, x)
+            theta = np.transpose(g).dot(
+                s) + (np.transpose(s).dot(h).dot(s)) / 2
+            res.append(theta)
+        return max(res)
 
     def make_constraints(self, x):
         lhs = []
@@ -40,7 +47,9 @@ class NewtonDirection:
         res = minimize(fun=self.objective,
                        x0=np.random.rand(self.n_variables + 1, ),
                        constraints=constraints)
-        return res.x[:-1], res.x[-1]
+        s = res.x[:-1]
+        theta = self._get_theta(x, s)
+        return s, theta
 
     def __call__(self, x):
         return self.forward(x)
@@ -119,7 +128,7 @@ class Newton:
             s, t = self.direction_finder(x)
             step = self.line_search(x, s, t)
             if t == 0:
-            # if np.abs(t) < self.tol:
+                # if np.abs(t) < self.tol:
                 break
             x = x + step * s
             y = self.calc(x)

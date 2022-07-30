@@ -20,4 +20,4 @@ def hessian(f: Callable, x):
 def get_approx(func: Callable, x):
     g = gradient(func, x)
     h = hessian(func, x)
-    return g, h
+    return g.numpy(), h.numpy()
